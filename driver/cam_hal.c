@@ -145,6 +145,7 @@ static void cam_task(void *arg)
                     if (cam_obj->jpeg_mode && cnt == 0 && cam_verify_jpeg_soi(frame_buffer_event->buf, frame_buffer_event->len) != 0) {
                         ll_cam_stop(cam_obj);
                         cam_obj->state = CAM_STATE_IDLE;
+                        printf("DR------->[cam_hal.cam_task.CAM_IN_SUC_EOF_EVENT]Check for JPEG SOI in the first buffer. stop if not foundNO-SOI!\n");
                     }
                     cnt++;
 
@@ -157,6 +158,7 @@ static void cam_task(void *arg)
                             if (!cam_obj->psram_mode) {
                                 if (cam_obj->fb_size < (frame_buffer_event->len + pixels_per_dma)) {
                                     ESP_LOGW(TAG, "FB-OVF");
+                                    printf("DR------->[cam_hal.cam_task.CAM_VSYNC_EVENT]FB-OVF! frame_pos:,%d,fb_size=%d \nframe_buffer_event->len=%d \n",frame_pos,cam_obj->fb_size,frame_buffer_event->len);
                                     cnt--;
                                 } else {
                                     frame_buffer_event->len += ll_cam_memcpy(cam_obj,
@@ -198,6 +200,8 @@ static void cam_task(void *arg)
                                 //queue is full and we could not pop a frame from it
                                 cam_obj->frames[frame_pos].en = 1;
                                 ESP_LOGE(TAG, "FBQ-RCV");
+                                printf("DR------->FBQ-RCV,queue is full and we could not pop a frame from it,frame_pos=%d\n",frame_pos);
+
                             }
                         }
                     }
@@ -353,7 +357,7 @@ esp_err_t cam_config(const camera_config_t *config, framesize_t frame_size, uint
     cam_obj->height = resolution[frame_size].height;
 
     if(cam_obj->jpeg_mode){
-        cam_obj->recv_size = cam_obj->width * cam_obj->height / 5;
+        cam_obj->recv_size = cam_obj->width * cam_obj->height / 3;
         cam_obj->fb_size = cam_obj->recv_size;
     } else {
         cam_obj->recv_size = cam_obj->width * cam_obj->height * cam_obj->in_bytes_per_pixel;
@@ -458,6 +462,7 @@ camera_fb_t *cam_take(TickType_t timeout)
                 return dma_buffer;
             } else {
                 ESP_LOGW(TAG, "NO-EOI");
+                printf("DR------->[cam_hal.cam_take]NO-EOI %d \r",(timeout - (xTaskGetTickCount() - start))/1000);
                 cam_give(dma_buffer);
                 return cam_take(timeout - (xTaskGetTickCount() - start));//recurse!!!!
             }
@@ -468,6 +473,8 @@ camera_fb_t *cam_take(TickType_t timeout)
         return dma_buffer;
     } else {
         ESP_LOGW(TAG, "Failed to get the frame on time!");
+        printf("\nDR------->[cam_hal.cam_take]Failed to get the frame for 4000ms.Give up.!\n");
+
     }
     return NULL;
 }
