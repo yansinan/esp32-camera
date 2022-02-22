@@ -157,7 +157,7 @@ static void cam_task(void *arg)
                     if (cam_obj->jpeg_mode && cnt == 0 && cam_verify_jpeg_soi(frame_buffer_event->buf, frame_buffer_event->len) != 0) {
                         ll_cam_stop(cam_obj);
                         cam_obj->state = CAM_STATE_IDLE;
-                        printf("DR------->[cam_hal.cam_task.CAM_IN_SUC_EOF_EVENT]Check for JPEG SOI in the first buffer. stop if not foundNO-SOI!\n");
+                        printf("DR------->[cam_hal.cam_task.CAM_IN_SUC_EOF_EVENT] JPEG SOI not in buffer.stop & CAM_STATE_IDLE\n");
                     }
                     cnt++;
 
@@ -172,6 +172,7 @@ static void cam_task(void *arg)
                                     ESP_LOGW(TAG, "FB-OVF");
                                     printf("DR------->[cam_hal.cam_task.CAM_VSYNC_EVENT]FB-OVF! frame_pos:,%d,fb_size=%d \nframe_buffer_event->len=%d \n",frame_pos,cam_obj->fb_size,frame_buffer_event->len);
                                     cnt--;
+                                    cam_obj->state = CAM_STATE_IDLE;
                                 } else {
                                     frame_buffer_event->len += ll_cam_memcpy(cam_obj,
                                         &frame_buffer_event->buf[frame_buffer_event->len], 
@@ -212,7 +213,7 @@ static void cam_task(void *arg)
                                 //queue is full and we could not pop a frame from it
                                 cam_obj->frames[frame_pos].en = 1;
                                 ESP_LOGE(TAG, "FBQ-RCV");
-                                printf("DR------->FBQ-RCV,queue is full and we could not pop a frame from it,frame_pos=%d\n",frame_pos);
+                                printf("DR------->FBQ-RCV,queue full,fail pop a frame,frame_pos=%d\n",frame_pos);
 
                             }
                         }
