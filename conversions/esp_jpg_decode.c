@@ -119,6 +119,7 @@ esp_err_t esp_jpg_decode(size_t len, jpg_scale_t scale, jpg_reader_cb reader, jp
     writer(arg, output_width, output_height, output_width, output_height, NULL);
 
     if (jres != JDR_OK) {
+        printf("[esp_jpg_decode]Decoder error failed msg=%s \n",jd_errors[jres]);
         ESP_LOGE(TAG, "JPG Decompression Failed! %s", jd_errors[jres]);
         return ESP_FAIL;
     }
