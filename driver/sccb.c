@@ -25,6 +25,12 @@ static const char* TAG = "sccb";
 
 #include "driver/i2c.h"
 
+// 更细后导致开机电压不足等异常?又没有了
+// support IDF 5.x
+#ifndef portTICK_RATE_MS
+#define portTICK_RATE_MS portTICK_PERIOD_MS
+#endif
+
 #define SCCB_FREQ               CONFIG_SCCB_CLK_FREQ  /*!< I2C master frequency*/
 #define WRITE_BIT               I2C_MASTER_WRITE      /*!< I2C master write */
 #define READ_BIT                I2C_MASTER_READ       /*!< I2C master read */
